@@ -3,10 +3,11 @@ package com.ivyapps.decision.ui
 import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -16,67 +17,69 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.*
 import com.ivyapps.decision.data.TreeNode
 import com.ivyapps.decision.ui.component.TreeNodeCircle
+import com.ivyapps.decision.ui.theme.Blue2Dark
 import com.ivyapps.decision.ui.theme.Gray
 import com.ivyapps.decision.ui.theme.Orange
+import com.ivyapps.decision.ui.theme.Red2Light
+
+// region Dummy tree
+private fun dummyTree(): TreeNode = TreeNode(
+    title = "Stocks?",
+    color = Color.Blue,
+    children = listOf(
+        TreeNode(
+            title = "Market down",
+            color = Orange,
+            children = listOf(
+                TreeNode(
+                    title = "recover in 1yr",
+                    color = Color.Yellow,
+                    children = listOf(
+                        TreeNode(
+                            title = "Buy with 20%",
+                            color = Color.Blue,
+                        )
+                    )
+                ),
+                TreeNode(
+                    title = "recover in 3+ yrs",
+                    color = Color.Red,
+                    children = listOf(
+                        TreeNode(
+                            title = "Invest 10%",
+                            color = Red2Light,
+                        ),
+                        TreeNode(
+                            title = "Wait!!",
+                            color = Blue2Dark,
+                        )
+                    )
+                ),
+            )
+        ),
+        TreeNode(
+            title = "Market up",
+            color = Color.Green,
+            children = listOf(
+                TreeNode(
+                    title = "Meta",
+                    color = Color.Magenta,
+                    children = listOf()
+                ),
+                TreeNode(
+                    title = "Alphabet",
+                    color = Color.Cyan,
+                    children = listOf()
+                ),
+            )
+        )
+    )
+)
+// endregion
 
 @Composable
 fun TreeScreen() {
-    val root by remember {
-        mutableStateOf(
-            TreeNode(
-                title = "Stocks?",
-                color = Color.Blue,
-                children = listOf(
-                    TreeNode(
-                        title = "Market down",
-                        color = Orange,
-                        children = listOf(
-                            TreeNode(
-                                title = "recover in 1yr",
-                                color = Color.Yellow,
-                                children = listOf(
-                                    TreeNode(
-                                        title = "Buy with 20%",
-                                        color = Color.Blue,
-                                    )
-                                )
-                            ),
-                            TreeNode(
-                                title = "recover in 3+ yrs",
-                                color = Color.Red,
-                                children = listOf(
-                                    TreeNode(
-                                        title = "Invest 10%",
-                                        color = Color.LightGray,
-                                    ),
-                                    TreeNode(
-                                        title = "Wait!!",
-                                        color = Color.Blue,
-                                    )
-                                )
-                            ),
-                        )
-                    ),
-                    TreeNode(
-                        title = "Market up",
-                        color = Color.Green,
-                        children = listOf(
-                            TreeNode(
-                                title = "Meta",
-                                color = Color.Magenta,
-                                children = listOf()
-                            ),
-                            TreeNode(
-                                title = "Alphabet",
-                                color = Color.Cyan,
-                                children = listOf()
-                            ),
-                        )
-                    )
-                )
-            )
-        )
-    }
+    val root by remember { mutableStateOf(dummyTree()) }
     var selectedKeys by remember { mutableStateOf(setOf(root.key)) }
 
     Tree(
@@ -90,6 +93,9 @@ fun TreeScreen() {
                 // select node
                 selectedKeys + node.key
             }
+        },
+        onResetSelected = {
+            selectedKeys = setOf(root.key)
         }
     )
 }
@@ -99,6 +105,7 @@ private fun Tree(
     root: TreeNode,
     selectedKeys: Set<String>,
     onClick: (TreeNode) -> Unit,
+    onResetSelected: () -> Unit,
 ) {
     val initialOffsetTop = with(LocalDensity.current) {
         24.dp.toPx()
@@ -126,8 +133,6 @@ private fun Tree(
     ) {
         val circleSize by remember { derivedStateOf { 96.dp * scale } }
         val fontSize by remember { derivedStateOf { 16.sp * scale } }
-        val verSpace by remember { derivedStateOf { 24.dp * scale } }
-        val horSpace by remember { derivedStateOf { 24.dp * scale } }
 
         val screenWidth = LocalConfiguration.current.screenWidthDp.dp
         DrawLevel(
@@ -140,6 +145,25 @@ private fun Tree(
             circleSize = circleSize,
             onClick = onClick
         )
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Button(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .systemBarsPadding()
+                .padding(bottom = 16.dp),
+            onClick = {
+                offset = IntOffset(
+                    x = 0,
+                    y = initialOffsetTop.toInt(),
+                )
+                scale = 1f
+                onResetSelected()
+            }
+        ) {
+            Text(text = "Reset")
+        }
     }
 }
 
