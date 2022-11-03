@@ -12,9 +12,12 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.*
 import com.ivyapps.decision.data.TreeNode
 import com.ivyapps.decision.ui.component.TreeNodeCircle
+import com.ivyapps.decision.ui.theme.Gray
+import com.ivyapps.decision.ui.theme.Orange
 
 @Composable
 fun TreeScreen() {
@@ -26,17 +29,31 @@ fun TreeScreen() {
                 children = listOf(
                     TreeNode(
                         title = "Market down",
-                        color = Color.DarkGray,
+                        color = Orange,
                         children = listOf(
                             TreeNode(
                                 title = "recover in 1yr",
                                 color = Color.Yellow,
-                                children = listOf()
+                                children = listOf(
+                                    TreeNode(
+                                        title = "Buy with 20%",
+                                        color = Color.Blue,
+                                    )
+                                )
                             ),
                             TreeNode(
                                 title = "recover in 3+ yrs",
                                 color = Color.Red,
-                                children = listOf()
+                                children = listOf(
+                                    TreeNode(
+                                        title = "Invest 10%",
+                                        color = Color.LightGray,
+                                    ),
+                                    TreeNode(
+                                        title = "Wait!!",
+                                        color = Color.Blue,
+                                    )
+                                )
                             ),
                         )
                     ),
@@ -83,7 +100,10 @@ private fun Tree(
     selectedKeys: Set<String>,
     onClick: (TreeNode) -> Unit,
 ) {
-    var offset by remember { mutableStateOf(IntOffset.Zero) }
+    val initialOffsetTop = with(LocalDensity.current) {
+        24.dp.toPx()
+    }
+    var offset by remember { mutableStateOf(IntOffset(x = 0, y = initialOffsetTop.toInt())) }
     var scale by remember { mutableStateOf(1f) }
 
     Box(
@@ -143,13 +163,17 @@ private fun DrawLevel(
     val nextLevelItems = mutableListOf<Pair<DpOffset, List<TreeNode>>>()
     for ((parentXY, nodeGroup) in levelItems) {
         for (node in nodeGroup) {
+            val selected = remember(selectedKeys, node.key) {
+                selectedKeys.contains(node.key)
+            }
             if (level > 0) {
                 Line(
                     start = parentXY,
                     end = DpOffset(
                         x = x + circleSize / 2,
                         y = y
-                    )
+                    ),
+                    color = if (selected) node.color else Gray,
                 )
             }
             TreeNodeCircle(
@@ -158,9 +182,7 @@ private fun DrawLevel(
                     y = y,
                 ),
                 node = node,
-                selected = remember(selectedKeys, node.key) {
-                    selectedKeys.contains(node.key)
-                },
+                selected = selected,
                 size = circleSize,
                 fontSize = fontSize,
                 onClick = onClick,
@@ -192,13 +214,14 @@ private fun DrawLevel(
 @Composable
 private fun Line(
     start: DpOffset,
+    color: Color,
     end: DpOffset
 ) {
     Canvas(
         modifier = Modifier.fillMaxSize()
     ) {
         drawLine(
-            color = Color.Red,
+            color = color,
             start = Offset(
                 x = start.x.toPx(),
                 y = start.y.toPx(),
