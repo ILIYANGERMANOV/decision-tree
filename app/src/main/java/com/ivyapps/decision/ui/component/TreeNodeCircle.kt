@@ -4,15 +4,13 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,12 +29,12 @@ import com.ivyapps.decision.ui.util.contrastColor
 @Composable
 fun TreeNodeCircle(
     node: TreeNode,
+    selected: Boolean,
     modifier: Modifier = Modifier,
-    size: Dp = 96.dp,
-    fontSize: TextUnit = 16.sp,
-    onClick: () -> Unit,
+    size: Dp,
+    fontSize: TextUnit,
+    onClick: (TreeNode) -> Unit,
 ) {
-    val selected by remember { derivedStateOf { node.selected } }
     Surface(
         modifier = modifier,
         shape = CircleShape,
@@ -50,11 +48,15 @@ fun TreeNodeCircle(
         Box(
             modifier = Modifier
                 .size(size)
-                .clickable(onClick = onClick),
+                .clickable {
+                    onClick(node)
+                },
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp),
                 text = node.title,
                 color = when (selected) {
                     true -> contrastColor(node.color)
@@ -81,9 +83,11 @@ private fun Preview_Selected() {
                 title = "Stocks?",
                 desc = "Buy now or not?",
                 color = Color.Blue,
-                selected = true,
                 children = emptyList()
             ),
+            selected = true,
+            size = 96.dp,
+            fontSize = 16.sp,
             onClick = {},
         )
     }
@@ -98,9 +102,11 @@ private fun Preview_NotSelected() {
                 title = "Stocks?",
                 desc = "Buy now or not?",
                 color = Color.Blue,
-                selected = false,
                 children = emptyList()
             ),
+            selected = false,
+            size = 96.dp,
+            fontSize = 16.sp,
             onClick = {},
         )
     }

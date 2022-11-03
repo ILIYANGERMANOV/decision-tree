@@ -1,40 +1,92 @@
 package com.ivyapps.decision.ui
 
 import android.util.Log
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.*
 import com.ivyapps.decision.data.TreeNode
 import com.ivyapps.decision.ui.component.TreeNodeCircle
 
 @Composable
 fun TreeScreen() {
-    Tree(
-        root = TreeNode(
-            title = "Stocks?",
-            desc = "",
-            color = Color.Blue,
-            selected = true,
-            children = emptyList()
+    val root by remember {
+        mutableStateOf(
+            TreeNode(
+                title = "Stocks?",
+                color = Color.Blue,
+                children = listOf(
+                    TreeNode(
+                        title = "Market down",
+                        color = Color.DarkGray,
+                        children = listOf(
+                            TreeNode(
+                                title = "recover in 1yr",
+                                color = Color.Yellow,
+                                children = listOf()
+                            ),
+                            TreeNode(
+                                title = "recover in 3+ yrs",
+                                color = Color.Red,
+                                children = listOf()
+                            ),
+                        )
+                    ),
+                    TreeNode(
+                        title = "Market up",
+                        color = Color.Green,
+                        children = listOf(
+                            TreeNode(
+                                title = "Meta",
+                                color = Color.Magenta,
+                                children = listOf()
+                            ),
+                            TreeNode(
+                                title = "Alphabet",
+                                color = Color.Cyan,
+                                children = listOf()
+                            ),
+                        )
+                    )
+                )
+            )
         )
+    }
+    var selectedKeys by remember { mutableStateOf(setOf(root.key)) }
+
+    Tree(
+        root = root,
+        selectedKeys = selectedKeys,
+        onClick = { node ->
+            selectedKeys = if (selectedKeys.contains(node.key)) {
+                // deselect node
+                selectedKeys.filter { it != node.key }.toSet()
+            } else {
+                // select node
+                selectedKeys + node.key
+            }
+        }
     )
 }
 
 @Composable
-private fun Tree(root: TreeNode) {
+private fun Tree(
+    root: TreeNode,
+    selectedKeys: Set<String>,
+    onClick: (TreeNode) -> Unit,
+) {
     var offset by remember { mutableStateOf(IntOffset.Zero) }
     var scale by remember { mutableStateOf(1f) }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .pointerInput(Unit) {
@@ -51,17 +103,111 @@ private fun Tree(root: TreeNode) {
                 }
             }
             .offset { IntOffset(x = offset.x, y = offset.y) },
-        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         val circleSize by remember { derivedStateOf { 96.dp * scale } }
         val fontSize by remember { derivedStateOf { 16.sp * scale } }
+        val verSpace by remember { derivedStateOf { 24.dp * scale } }
+        val horSpace by remember { derivedStateOf { 24.dp * scale } }
 
-        TreeNodeCircle(
-            node = root,
-            size = circleSize,
+        val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+        DrawLevel(
+            level = 0,
+            levelItems = listOf(
+                DpOffset(x = screenWidth / 2 - circleSize / 2, y = 0.dp) to listOf(root)
+            ),
+            selectedKeys = selectedKeys,
             fontSize = fontSize,
-        ) {
+            circleSize = circleSize,
+            onClick = onClick
+        )
+    }
+}
 
+@Composable
+private fun DrawLevel(
+    level: Int,
+    levelItems: List<Pair<DpOffset, List<TreeNode>>>,
+    selectedKeys: Set<String>,
+    fontSize: TextUnit,
+    circleSize: Dp,
+    onClick: (TreeNode) -> Unit,
+) {
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+    val paddingBetweenItems = 24.dp
+    val allNodes = levelItems.flatMap { it.second }
+    val itemsWidth = allNodes.size * circleSize + (allNodes.size - 1) * paddingBetweenItems
+
+    var x = screenWidth / 2 - itemsWidth / 2
+    val y = (circleSize + 48.dp) * level
+
+    val nextLevelItems = mutableListOf<Pair<DpOffset, List<TreeNode>>>()
+    for ((parentXY, nodeGroup) in levelItems) {
+        for (node in nodeGroup) {
+            if (level > 0) {
+                Line(
+                    start = parentXY,
+                    end = DpOffset(
+                        x = x + circleSize / 2,
+                        y = y
+                    )
+                )
+            }
+            TreeNodeCircle(
+                modifier = Modifier.offset(
+                    x = x,
+                    y = y,
+                ),
+                node = node,
+                selected = remember(selectedKeys, node.key) {
+                    selectedKeys.contains(node.key)
+                },
+                size = circleSize,
+                fontSize = fontSize,
+                onClick = onClick,
+            )
+            if (node.children.isNotEmpty()) {
+                nextLevelItems.add(
+                    DpOffset(
+                        x = x + circleSize / 2,
+                        y = y + circleSize,
+                    ) to node.children
+                )
+            }
+            x += circleSize + paddingBetweenItems
         }
+    }
+
+    if (nextLevelItems.isNotEmpty()) {
+        DrawLevel(
+            level = level + 1,
+            levelItems = nextLevelItems,
+            selectedKeys = selectedKeys,
+            fontSize = fontSize,
+            circleSize = circleSize,
+            onClick = onClick,
+        )
+    }
+}
+
+@Composable
+private fun Line(
+    start: DpOffset,
+    end: DpOffset
+) {
+    Canvas(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        drawLine(
+            color = Color.Red,
+            start = Offset(
+                x = start.x.toPx(),
+                y = start.y.toPx(),
+            ),
+            end = Offset(
+                x = end.x.toPx(),
+                y = end.y.toPx(),
+            ),
+            strokeWidth = 2.dp.toPx()
+        )
     }
 }
