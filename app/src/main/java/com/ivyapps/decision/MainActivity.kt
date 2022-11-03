@@ -10,7 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.ivyapps.decision.ui.TreeScreen
+import com.ivyapps.decision.ui.screen.tree.TreeScreen
 import com.ivyapps.decision.ui.theme.DecisionTreeTheme
 
 class MainActivity : ComponentActivity() {

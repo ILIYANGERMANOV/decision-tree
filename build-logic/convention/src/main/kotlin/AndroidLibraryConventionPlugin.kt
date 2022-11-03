@@ -16,7 +16,6 @@
 
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
 import com.android.build.gradle.LibraryExtension
-import com.ivyapps.decision.configureFlavors
 import com.ivyapps.decision.configureKotlinAndroid
 import com.ivyapps.decision.configurePrintApksTask
 import org.gradle.api.Plugin
@@ -36,7 +35,6 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
             extensions.configure<LibraryExtension> {
                 configureKotlinAndroid(this)
                 defaultConfig.targetSdk = 33
-                configureFlavors(this)
             }
             extensions.configure<LibraryAndroidComponentsExtension> {
                 configurePrintApksTask(this)

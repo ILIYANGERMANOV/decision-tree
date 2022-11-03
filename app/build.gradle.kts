@@ -10,6 +10,12 @@ android {
 
     compileSdk = 33
 
+    buildTypes {
+        debug {
+
+        }
+    }
+
     buildFeatures {
         compose = true
     }
@@ -18,7 +24,6 @@ android {
 dependencies {
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
-
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.coil.kt)
@@ -37,4 +42,13 @@ dependencies {
     implementation(libs.androidx.metrics)
     implementation(libs.androidx.tracing.ktx)
     implementation(libs.androidx.activity.compose)
+
+    testImplementation(libs.junit5)
+    testImplementation(libs.kotest.junit5)
+    testImplementation(libs.kotest.apiJvm)
+    testImplementation(libs.kotest.engineJvm)
+    testImplementation(libs.kotest.assertions)
+    testImplementation(libs.kotest.dataset)
+    testImplementation(libs.kotest.property)
+    testImplementation(libs.kotest.kotlinReflect)
 }

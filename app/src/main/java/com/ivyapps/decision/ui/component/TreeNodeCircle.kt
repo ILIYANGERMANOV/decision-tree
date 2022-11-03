@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
+import androidx.compose.ui.zIndex
 import com.ivyapps.decision.data.TreeNode
 import com.ivyapps.decision.ui.theme.preview.AppPreview
 import com.ivyapps.decision.ui.util.contrastColor
@@ -34,7 +35,7 @@ fun TreeNodeCircle(
     onClick: (TreeNode) -> Unit,
 ) {
     Surface(
-        modifier = modifier,
+        modifier = modifier.zIndex(16f),
         shape = CircleShape,
         color = if (selected) node.color else Color.Transparent,
         contentColor = when (selected) {
