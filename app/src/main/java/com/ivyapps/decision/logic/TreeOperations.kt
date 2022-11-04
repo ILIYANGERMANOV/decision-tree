@@ -41,7 +41,7 @@ fun TreeNode.removeNode(
         )
     }
     // Cannot remove the "Root" node
-    return removeNodeInternal() ?: this
+    return removeNodeInternal() ?: this.copy(children = emptyList())
 }
 
 fun TreeNode.find(targetKey: String): TreeNode? {

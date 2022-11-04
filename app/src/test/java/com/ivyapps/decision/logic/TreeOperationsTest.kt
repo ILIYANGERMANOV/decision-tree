@@ -49,12 +49,16 @@ class TreeOperationsTest : FreeSpec({
         )
     }
 
-    "removing root does nothing" {
-        val tree = TreeNode("Root")
+    "removing root removes only children" {
+        val tree = TreeNode(
+            "Root", children = listOf(
+                TreeNode("a"), TreeNode("b"), TreeNode("c")
+            )
+        )
 
         val res = tree.removeNode(keyToRemove = tree.key)
 
-        res shouldBe tree
+        res shouldBe tree.copy(children = emptyList())
     }
 
     "updates the root" {

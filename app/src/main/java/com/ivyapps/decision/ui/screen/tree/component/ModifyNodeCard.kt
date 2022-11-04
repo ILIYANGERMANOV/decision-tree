@@ -235,12 +235,12 @@ private fun DeleteButton(
         },
         colors = IconButtonDefaults.iconButtonColors(
             containerColor = when (deleteConfirmed) {
-                true -> MaterialTheme.colorScheme.error
-                false -> MaterialTheme.colorScheme.errorContainer
+                true -> MaterialTheme.colorScheme.errorContainer
+                false -> MaterialTheme.colorScheme.error
             },
             contentColor = when (deleteConfirmed) {
-                true -> MaterialTheme.colorScheme.onError
-                false -> MaterialTheme.colorScheme.error
+                true -> MaterialTheme.colorScheme.onErrorContainer
+                false -> MaterialTheme.colorScheme.onError
             },
         )
     ) {
