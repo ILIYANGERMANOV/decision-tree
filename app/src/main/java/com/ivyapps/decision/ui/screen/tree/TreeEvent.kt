@@ -28,6 +28,5 @@ sealed interface TreeEvent {
     ) : TreeEvent
 
     data class NodeClicked(val node: TreeNode) : TreeEvent
-    object ResetSelected : TreeEvent
     object ToggleEditMode : TreeEvent
 }

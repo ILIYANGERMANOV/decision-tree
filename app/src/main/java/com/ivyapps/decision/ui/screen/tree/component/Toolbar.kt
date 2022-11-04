@@ -16,7 +16,7 @@ import com.ivyapps.decision.ui.theme.preview.AppPreview
 fun Toolbar(
     editMode: Boolean,
     onToggleEditMode: () -> Unit,
-    onReset: () -> Unit,
+    onRecenter: () -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -34,12 +34,12 @@ fun Toolbar(
             Button(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = when (editMode) {
-                        true -> MaterialTheme.colorScheme.secondary
-                        false -> MaterialTheme.colorScheme.primary
+                        true -> MaterialTheme.colorScheme.primary
+                        false -> MaterialTheme.colorScheme.secondary
                     },
                     contentColor = when (editMode) {
-                        true -> MaterialTheme.colorScheme.onSecondary
-                        false -> MaterialTheme.colorScheme.onPrimary
+                        true -> MaterialTheme.colorScheme.onPrimary
+                        false -> MaterialTheme.colorScheme.onSecondary
                     }
                 ),
                 contentPadding = PaddingValues(
@@ -60,12 +60,12 @@ fun Toolbar(
             Spacer(modifier = Modifier.weight(1f))
             Button(
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                    containerColor = MaterialTheme.colorScheme.tertiary,
+                    contentColor = MaterialTheme.colorScheme.onTertiary,
                 ),
-                onClick = onReset,
+                onClick = onRecenter,
             ) {
-                Text(text = "Reset")
+                Text(text = "Re-center")
             }
         }
     }
@@ -76,6 +76,6 @@ fun Toolbar(
 @Composable
 private fun Preview() {
     AppPreview {
-        Toolbar(editMode = true, onToggleEditMode = {}, onReset = {})
+        Toolbar(editMode = true, onToggleEditMode = {}, onRecenter = {})
     }
 }

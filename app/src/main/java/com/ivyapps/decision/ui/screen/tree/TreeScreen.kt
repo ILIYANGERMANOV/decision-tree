@@ -39,9 +39,6 @@ fun TreeScreen() {
         onClick = { node ->
             viewModel.onEvent(TreeEvent.NodeClicked(node))
         },
-        onResetSelected = {
-            viewModel.onEvent(TreeEvent.ResetSelected)
-        },
         onToggleEditMode = {
             viewModel.onEvent(TreeEvent.ToggleEditMode)
         },
@@ -57,7 +54,6 @@ private fun Tree(
     nodeCard: NodeCard?,
     onToggleEditMode: () -> Unit,
     onClick: (TreeNode) -> Unit,
-    onResetSelected: () -> Unit,
     onEvent: (TreeEvent) -> Unit,
 ) {
     val initialOffsetTop = with(LocalDensity.current) {
@@ -103,13 +99,12 @@ private fun Tree(
     Toolbar(
         editMode = editMode,
         onToggleEditMode = onToggleEditMode,
-        onReset = {
+        onRecenter = {
             offset = IntOffset(
                 x = 0,
                 y = initialOffsetTop.toInt(),
             )
             scale = 1f
-            onResetSelected()
         }
     )
 

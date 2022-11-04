@@ -54,7 +54,6 @@ class TreeViewModel @Inject constructor() : ViewModel() {
                 is TreeEvent.DeleteNode -> handleDeleteNode(event)
                 is TreeEvent.EditNode -> handleEditNode(event)
                 is TreeEvent.NodeClicked -> handleNodeClicked(event)
-                TreeEvent.ResetSelected -> handleResetSelected()
                 TreeEvent.ToggleEditMode -> handleToggleEditMode()
                 is TreeEvent.ShowAddNodeModal -> handleAddNodeModal(event)
                 TreeEvent.CloseNodeModal -> handleCloseNodeModal()
@@ -124,10 +123,6 @@ class TreeViewModel @Inject constructor() : ViewModel() {
 
     private fun handleAddNodeModal(event: TreeEvent.ShowAddNodeModal) {
         nodeCard.value = event.card
-    }
-
-    private fun handleResetSelected() {
-        selectedKeys.value = emptySet()
     }
 
     private fun handleToggleEditMode() {
