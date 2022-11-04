@@ -3,11 +3,10 @@ package com.ivyapps.decision.ui.screen.tree
 import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -15,8 +14,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.*
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ivyapps.decision.data.TreeNode
 import com.ivyapps.decision.ui.component.TreeNodeCircle
+import com.ivyapps.decision.ui.screen.tree.component.ModifyNodeCard
+import com.ivyapps.decision.ui.screen.tree.component.Toolbar
 import com.ivyapps.decision.ui.theme.Blue2Dark
 import com.ivyapps.decision.ui.theme.Gray
 import com.ivyapps.decision.ui.theme.Orange
@@ -79,33 +81,37 @@ private fun dummyTree(): TreeNode = TreeNode(
 
 @Composable
 fun TreeScreen() {
-    val root by remember { mutableStateOf(dummyTree()) }
-    var selectedKeys by remember { mutableStateOf(setOf(root.key)) }
+    val viewModel: TreeViewModel = viewModel()
+    val state by viewModel.state.collectAsState()
 
     Tree(
-        root = root,
-        selectedKeys = selectedKeys,
+        tree = state.tree,
+        selectedKeys = state.selectedKeys,
+        editMode = state.editMode,
+        nodeCard = state.nodeCard,
         onClick = { node ->
-            selectedKeys = if (selectedKeys.contains(node.key)) {
-                // deselect node
-                selectedKeys.filter { it != node.key }.toSet()
-            } else {
-                // select node
-                selectedKeys + node.key
-            }
+            viewModel.onEvent(TreeEvent.NodeClicked(node))
         },
         onResetSelected = {
-            selectedKeys = setOf(root.key)
-        }
+            viewModel.onEvent(TreeEvent.ResetSelected)
+        },
+        onToggleEditMode = {
+            viewModel.onEvent(TreeEvent.ToggleEditMode)
+        },
+        onEvent = viewModel::onEvent,
     )
 }
 
 @Composable
 private fun Tree(
-    root: TreeNode,
+    tree: TreeNode,
     selectedKeys: Set<String>,
+    editMode: Boolean,
+    nodeCard: NodeCard?,
+    onToggleEditMode: () -> Unit,
     onClick: (TreeNode) -> Unit,
     onResetSelected: () -> Unit,
+    onEvent: (TreeEvent) -> Unit,
 ) {
     val initialOffsetTop = with(LocalDensity.current) {
         24.dp.toPx()
@@ -138,7 +144,7 @@ private fun Tree(
         DrawLevel(
             level = 0,
             levelItems = listOf(
-                DpOffset(x = screenWidth / 2 - circleSize / 2, y = 0.dp) to listOf(root)
+                DpOffset(x = screenWidth / 2 - circleSize / 2, y = 0.dp) to listOf(tree)
             ),
             selectedKeys = selectedKeys,
             fontSize = fontSize,
@@ -147,24 +153,26 @@ private fun Tree(
         )
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Button(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .systemBarsPadding()
-                .padding(bottom = 16.dp),
-            onClick = {
-                offset = IntOffset(
-                    x = 0,
-                    y = initialOffsetTop.toInt(),
-                )
-                scale = 1f
-                onResetSelected()
-            }
-        ) {
-            Text(text = "Reset")
+    Toolbar(
+        editMode = editMode,
+        onToggleEditMode = onToggleEditMode,
+        onReset = {
+            offset = IntOffset(
+                x = 0,
+                y = initialOffsetTop.toInt(),
+            )
+            scale = 1f
+            onResetSelected()
         }
-    }
+    )
+
+    ModifyNodeCard(
+        nodeCard = nodeCard,
+        onAddNodeModal = onEvent,
+        onAddNode = onEvent,
+        onEditNode = onEvent,
+        onDeleteNode = onEvent,
+    )
 }
 
 @Composable
@@ -185,14 +193,14 @@ private fun DrawLevel(
     val y = (circleSize + 48.dp) * level
 
     val nextLevelItems = mutableListOf<Pair<DpOffset, List<TreeNode>>>()
-    for ((parentXY, nodeGroup) in levelItems) {
+    for ((parentOffset, nodeGroup) in levelItems) {
         for (node in nodeGroup) {
             val selected = remember(selectedKeys, node.key) {
                 selectedKeys.contains(node.key)
             }
             if (level > 0) {
                 Line(
-                    start = parentXY,
+                    start = parentOffset,
                     end = DpOffset(
                         x = x + circleSize / 2,
                         y = y

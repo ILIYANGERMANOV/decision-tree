@@ -42,6 +42,7 @@ dependencies {
     implementation(libs.androidx.metrics)
     implementation(libs.androidx.tracing.ktx)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.lifecycle.viewModelCompose)
 
     testImplementation(libs.junit5)
     testImplementation(libs.kotest.junit5)
