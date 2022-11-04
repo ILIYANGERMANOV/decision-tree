@@ -8,12 +8,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.*
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ivyapps.decision.data.TreeNode
@@ -22,6 +24,7 @@ import com.ivyapps.decision.ui.screen.tree.component.ModifyNodeCard
 import com.ivyapps.decision.ui.screen.tree.component.Toolbar
 import com.ivyapps.decision.ui.theme.Gray
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun TreeScreen() {
     val viewModel: TreeViewModel = viewModel()
@@ -31,13 +34,19 @@ fun TreeScreen() {
         viewModel.onEvent(TreeEvent.CloseNodeModal)
     }
 
+    val keyboardController = LocalSoftwareKeyboardController.current
     Tree(
         tree = state.tree,
         selectedKeys = state.selectedKeys,
         editMode = state.editMode,
         nodeCard = state.nodeCard,
         onClick = { node ->
-            viewModel.onEvent(TreeEvent.NodeClicked(node))
+            if ((state.nodeCard as? NodeCard.EditNode)?.node?.key == node.key) {
+                // same node clicked, open keyboard
+                keyboardController?.show()
+            } else {
+                viewModel.onEvent(TreeEvent.NodeClicked(node))
+            }
         },
         onToggleEditMode = {
             viewModel.onEvent(TreeEvent.ToggleEditMode)
