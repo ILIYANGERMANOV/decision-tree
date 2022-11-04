@@ -53,7 +53,7 @@ private fun keyboardPaddingBottom(): Dp {
 
 // region Keyboard shown
 @Composable
-private fun keyboardShownState(): MutableState<Boolean> {
+fun keyboardShownState(): MutableState<Boolean> {
     val keyboardOpen = remember { mutableStateOf(false) }
     val rootView = LocalView.current
 

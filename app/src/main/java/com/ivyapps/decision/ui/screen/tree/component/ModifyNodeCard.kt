@@ -39,6 +39,7 @@ import com.ivyapps.decision.ui.screen.tree.TreeEvent
 import com.ivyapps.decision.ui.theme.*
 import com.ivyapps.decision.ui.theme.preview.AppPreview
 import com.ivyapps.decision.ui.util.animatedKeyboardPadding
+import com.ivyapps.decision.ui.util.keyboardShownState
 import com.ivyapps.decision.ui.util.rememberContrast
 import com.ivyapps.decision.ui.util.rememberDynamicContrast
 import kotlinx.coroutines.delay
@@ -68,7 +69,7 @@ fun ModifyNodeCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
-                    .padding(bottom = 8.dp + keyboardPadding),
+                    .padding(bottom = keyboardPadding),
                 shape = MaterialTheme.shapes.large
             ) {
                 val editNode = (nodeCard as? NodeCard.EditNode)?.node
@@ -122,39 +123,9 @@ fun ModifyNodeCard(
                         )
                     }
                 )
-                if (editNode != null) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Divider(Modifier.fillMaxWidth())
-                    Spacer(modifier = Modifier.height(8.dp))
-                    NodeChildren(
-                        parentKey = editNode.key,
-                        children = editNode.children,
-                        onAddNode = { parentKey, atIndex ->
-                            onAddNodeModal(
-                                TreeEvent.ShowAddNodeModal(
-                                    card = NodeCard.NewNode(
-                                        parentKey = parentKey,
-                                        atIndex = atIndex,
-                                    )
-                                )
-                            )
-                        },
-                    )
-                }
+                ManagerChildrenSection(editNode = editNode, onAddNodeModal = onAddNodeModal)
+                CloseButton(onClose = onClose)
                 Spacer(modifier = Modifier.height(8.dp))
-                val keyboardController = LocalSoftwareKeyboardController.current
-                Button(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    onClick = {
-                        keyboardController?.hide()
-                        onClose()
-                    }
-                ) {
-                    Text(text = "Close")
-                }
-                Spacer(modifier = Modifier.height(12.dp))
             }
         }
     }
@@ -184,6 +155,66 @@ private fun autoSave(
             )
         )
         null -> {}
+    }
+}
+
+@Composable
+private fun ColumnScope.ManagerChildrenSection(
+    editNode: TreeNode?,
+    onAddNodeModal: (TreeEvent.ShowAddNodeModal) -> Unit
+) {
+    AnimatedVisibility(visible = editNode != null) {
+        Column {
+
+
+            Spacer(modifier = Modifier.height(12.dp))
+            Divider(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            NodeChildren(
+                parentKey = editNode?.key ?: "",
+                children = editNode?.children ?: emptyList(),
+                onAddNode = { parentKey, atIndex ->
+                    onAddNodeModal(
+                        TreeEvent.ShowAddNodeModal(
+                            card = NodeCard.NewNode(
+                                parentKey = parentKey,
+                                atIndex = atIndex,
+                            )
+                        )
+                    )
+                },
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+private fun CloseButton(
+    onClose: () -> Unit
+) {
+    val keyboardShown by keyboardShownState()
+    AnimatedVisibility(
+        visible = !keyboardShown,
+        enter = fadeIn() + expandVertically(),
+        exit = fadeOut() + shrinkVertically()
+    ) {
+        val keyboardController = LocalSoftwareKeyboardController.current
+        Button(
+            modifier = Modifier
+                .padding(top = 8.dp)
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            onClick = {
+                keyboardController?.hide()
+                onClose()
+            }
+        ) {
+            Text(text = "Close")
+        }
     }
 }
 
@@ -325,12 +356,13 @@ private fun ColorButton(
 
 // region Add child options
 @Composable
-private fun NodeChildren(
+private fun ColumnScope.NodeChildren(
     parentKey: String,
     children: List<TreeNode>,
     onAddNode: (String, Int) -> Unit,
 ) {
     LazyRow(
+        modifier = Modifier.align(Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically
     ) {
         item {
