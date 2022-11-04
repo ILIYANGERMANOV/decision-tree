@@ -10,11 +10,47 @@ android {
 
     compileSdk = 33
 
-    buildTypes {
-        debug {
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("../debug.jks")
+            storePassword = "IVY7834!DEbug"
+            keyAlias = "debug"
+            keyPassword = "IVY7834!DEbug"
+        }
 
+        create("release") {
+            storeFile = file("../sign.jks")
+            storePassword = System.getenv("SIGNING_STORE_PASSWORD")
+            keyAlias = System.getenv("SIGNING_KEY_ALIAS")
+            keyPassword = System.getenv("SIGNING_KEY_PASSWORD")
         }
     }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            isDebuggable = false
+            isDefault = false
+
+            signingConfig = signingConfigs.getByName("release")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+
+        debug {
+            isDebuggable = true
+            isMinifyEnabled = false
+            isDefault = true
+
+            signingConfig = signingConfigs.getByName("debug")
+
+            applicationIdSuffix = ".debug"
+        }
+    }
+
 
     buildFeatures {
         compose = true
