@@ -55,7 +55,7 @@ fun Toolbar(
                     contentDescription = "edit mode"
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = if (editMode) "Edit mode" else "Use mode")
+                Text(text = if (editMode) "Edit mode" else "View mode")
             }
             Spacer(modifier = Modifier.weight(1f))
             Button(

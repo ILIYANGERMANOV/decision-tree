@@ -3,9 +3,7 @@ package com.ivyapps.decision.ui.screen.tree
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ivyapps.decision.data.TreeNode
-import com.ivyapps.decision.logic.addNode
-import com.ivyapps.decision.logic.removeNode
-import com.ivyapps.decision.logic.updateNode
+import com.ivyapps.decision.logic.*
 import com.ivyapps.decision.ui.theme.Blue3
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -114,10 +112,12 @@ class TreeViewModel @Inject constructor() : ViewModel() {
     private fun viewModeNodeClick(nodeKey: String) {
         selectedKeys.value = if (selectedKeys.value.contains(nodeKey)) {
             // deselect node
-            selectedKeys.value.filter { it != nodeKey }.toSet()
+            val deselected = tree.value.deselect(nodeKey) ?: return
+            selectedKeys.value.filter { !deselected.contains(it) }.toSet()
         } else {
             // select node
-            selectedKeys.value + nodeKey
+            val selected = tree.value.select(nodeKey) ?: return
+            selectedKeys.value + selected
         }
     }
     // endregion

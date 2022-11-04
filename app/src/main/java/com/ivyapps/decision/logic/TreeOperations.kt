@@ -43,3 +43,12 @@ fun TreeNode.removeNode(
     // Cannot remove the "Root" node
     return removeNodeInternal() ?: this
 }
+
+fun TreeNode.find(targetKey: String): TreeNode? {
+    if (key == targetKey) return this
+    for (child in children) {
+        val res = child.find(targetKey)
+        if (res != null) return res
+    }
+    return null
+}
