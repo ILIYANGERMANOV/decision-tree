@@ -29,12 +29,33 @@ fun Toolbar(
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 16.dp)
                 .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Button(onClick = onToggleEditMode) {
+            Button(
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = when (editMode) {
+                        true -> MaterialTheme.colorScheme.secondary
+                        false -> MaterialTheme.colorScheme.primary
+                    },
+                    contentColor = when (editMode) {
+                        true -> MaterialTheme.colorScheme.onSecondary
+                        false -> MaterialTheme.colorScheme.onPrimary
+                    }
+                ),
+                contentPadding = PaddingValues(
+                    top = 8.dp,
+                    bottom = 8.dp,
+                    start = 12.dp,
+                    end = 16.dp
+                ),
+                onClick = onToggleEditMode
+            ) {
                 Icon(
                     imageVector = if (editMode) Icons.Rounded.Edit else Icons.Rounded.Preview,
                     contentDescription = "edit mode"
                 )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = if (editMode) "Edit mode" else "Use mode")
             }
             Spacer(modifier = Modifier.weight(1f))
             Button(

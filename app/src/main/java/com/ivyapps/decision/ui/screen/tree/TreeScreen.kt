@@ -20,65 +20,7 @@ import com.ivyapps.decision.data.TreeNode
 import com.ivyapps.decision.ui.component.TreeNodeCircle
 import com.ivyapps.decision.ui.screen.tree.component.ModifyNodeCard
 import com.ivyapps.decision.ui.screen.tree.component.Toolbar
-import com.ivyapps.decision.ui.theme.Blue2Dark
 import com.ivyapps.decision.ui.theme.Gray
-import com.ivyapps.decision.ui.theme.Orange
-import com.ivyapps.decision.ui.theme.Red2Light
-
-// region Dummy tree
-private fun dummyTree(): TreeNode = TreeNode(
-    title = "Stocks?",
-    color = Color.Blue,
-    children = listOf(
-        TreeNode(
-            title = "Market down",
-            color = Orange,
-            children = listOf(
-                TreeNode(
-                    title = "recover in 1yr",
-                    color = Color.Yellow,
-                    children = listOf(
-                        TreeNode(
-                            title = "Buy with 20%",
-                            color = Color.Blue,
-                        )
-                    )
-                ),
-                TreeNode(
-                    title = "recover in 3+ yrs",
-                    color = Color.Red,
-                    children = listOf(
-                        TreeNode(
-                            title = "Invest 10%",
-                            color = Red2Light,
-                        ),
-                        TreeNode(
-                            title = "Wait!!",
-                            color = Blue2Dark,
-                        )
-                    )
-                ),
-            )
-        ),
-        TreeNode(
-            title = "Market up",
-            color = Color.Green,
-            children = listOf(
-                TreeNode(
-                    title = "Meta",
-                    color = Color.Magenta,
-                    children = listOf()
-                ),
-                TreeNode(
-                    title = "Alphabet",
-                    color = Color.Cyan,
-                    children = listOf()
-                ),
-            )
-        )
-    )
-)
-// endregion
 
 @Composable
 fun TreeScreen() {
