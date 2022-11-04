@@ -4,9 +4,11 @@ import androidx.compose.ui.graphics.Color
 import com.ivyapps.decision.data.TreeNode
 
 sealed interface TreeEvent {
-    data class AddNodeModal(
+    data class ShowAddNodeModal(
         val card: NodeCard,
     ) : TreeEvent
+
+    object CloseNodeModal : TreeEvent
 
     data class AddNode(
         val parentKey: String,

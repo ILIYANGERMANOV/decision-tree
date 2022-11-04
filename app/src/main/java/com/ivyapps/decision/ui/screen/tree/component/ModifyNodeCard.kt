@@ -1,6 +1,6 @@
 package com.ivyapps.decision.ui.screen.tree.component
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -8,17 +8,27 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.DeleteForever
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -33,36 +43,39 @@ import com.ivyapps.decision.ui.util.rememberContrast
 import com.ivyapps.decision.ui.util.rememberDynamicContrast
 import kotlinx.coroutines.delay
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ModifyNodeCard(
     nodeCard: NodeCard?,
-    onAddNodeModal: (TreeEvent.AddNodeModal) -> Unit,
+    onAddNodeModal: (TreeEvent.ShowAddNodeModal) -> Unit,
     onAddNode: (TreeEvent.AddNode) -> Unit,
     onEditNode: (TreeEvent.EditNode) -> Unit,
+    onClose: () -> Unit,
     onDeleteNode: (TreeEvent.DeleteNode) -> Unit,
 ) {
-    val keyboardPadding = animatedKeyboardPadding()
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(bottom = keyboardPadding)
     ) {
         AnimatedVisibility(
             modifier = Modifier.align(Alignment.BottomCenter),
-            visible = nodeCard != null
+            visible = nodeCard != null,
+            enter = fadeIn() + slideInVertically { it },
+            exit = fadeOut() + slideOutVertically { it },
         ) {
+            val keyboardPadding = animatedKeyboardPadding()
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
-                    .padding(bottom = 16.dp),
+                    .padding(bottom = 8.dp + keyboardPadding),
                 shape = MaterialTheme.shapes.large
             ) {
                 val editNode = (nodeCard as? NodeCard.EditNode)?.node
                 var selectedColor by remember {
                     mutableStateOf(editNode?.color ?: Blue3)
                 }
-                var title by remember { mutableStateOf(editNode?.title ?: "") }
+                var title by remember(nodeCard) { mutableStateOf(editNode?.title ?: "") }
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(
                     modifier = Modifier
@@ -71,39 +84,27 @@ fun ModifyNodeCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     TitleInput(
+                        nodeCard = nodeCard,
                         modifier = Modifier
                             .weight(1f)
                             .padding(end = 8.dp),
                         initialValue = editNode?.title ?: "",
-                        onValueChange = { title = it }
+                        onValueChange = {
+                            title = it
+                            autoSave(
+                                nodeCard = nodeCard,
+                                title = title,
+                                selectedColor = selectedColor,
+                                onAddNode = onAddNode,
+                                onEditNode = onEditNode
+                            )
+                        }
                     )
                     if (editNode != null) {
-                        var deleteConfirmed by remember { mutableStateOf(false) }
-                        IconButton(
-                            modifier = Modifier.clip(CircleShape),
-                            onClick = {
-                                if (deleteConfirmed) {
-                                    onDeleteNode(TreeEvent.DeleteNode(key = editNode.key))
-                                } else {
-                                    deleteConfirmed = true
-                                }
-                            },
-                            colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = when (deleteConfirmed) {
-                                    true -> MaterialTheme.colorScheme.error
-                                    false -> MaterialTheme.colorScheme.errorContainer
-                                },
-                                contentColor = when (deleteConfirmed) {
-                                    true -> MaterialTheme.colorScheme.onError
-                                    false -> MaterialTheme.colorScheme.error
-                                },
-                            )
-                        ) {
-                            Icon(
-                                imageVector = if (deleteConfirmed)
-                                    Icons.Rounded.DeleteForever else Icons.Rounded.DeleteForever,
-                                contentDescription = "delete"
-                            )
+                        val keyboardController = LocalSoftwareKeyboardController.current
+                        DeleteButton(nodeCard = nodeCard) {
+                            keyboardController?.hide()
+                            onDeleteNode(TreeEvent.DeleteNode(editNode.key))
                         }
                     }
                 }
@@ -112,6 +113,13 @@ fun ModifyNodeCard(
                     selectedColor = selectedColor,
                     onColorSelect = {
                         selectedColor = it
+                        autoSave(
+                            nodeCard = nodeCard,
+                            title = title,
+                            selectedColor = selectedColor,
+                            onAddNode = onAddNode,
+                            onEditNode = onEditNode
+                        )
                     }
                 )
                 if (editNode != null) {
@@ -123,7 +131,7 @@ fun ModifyNodeCard(
                         children = editNode.children,
                         onAddNode = { parentKey, atIndex ->
                             onAddNodeModal(
-                                TreeEvent.AddNodeModal(
+                                TreeEvent.ShowAddNodeModal(
                                     card = NodeCard.NewNode(
                                         parentKey = parentKey,
                                         atIndex = atIndex,
@@ -134,32 +142,17 @@ fun ModifyNodeCard(
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
+                val keyboardController = LocalSoftwareKeyboardController.current
                 Button(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
                     onClick = {
-                        when (nodeCard) {
-                            is NodeCard.EditNode -> onEditNode(
-                                TreeEvent.EditNode(
-                                    key = nodeCard.node.key,
-                                    title = title,
-                                    color = selectedColor,
-                                )
-                            )
-                            is NodeCard.NewNode -> onAddNode(
-                                TreeEvent.AddNode(
-                                    parentKey = nodeCard.parentKey,
-                                    atIndex = nodeCard.atIndex,
-                                    title = title,
-                                    color = selectedColor,
-                                )
-                            )
-                            null -> {}
-                        }
+                        keyboardController?.hide()
+                        onClose()
                     }
                 ) {
-                    Text(text = if (editNode != null) "Save" else "Add")
+                    Text(text = "Close")
                 }
                 Spacer(modifier = Modifier.height(12.dp))
             }
@@ -167,9 +160,71 @@ fun ModifyNodeCard(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+private fun autoSave(
+    nodeCard: NodeCard?,
+    title: String,
+    selectedColor: Color,
+    onAddNode: (TreeEvent.AddNode) -> Unit,
+    onEditNode: (TreeEvent.EditNode) -> Unit,
+) {
+    when (nodeCard) {
+        is NodeCard.EditNode -> onEditNode(
+            TreeEvent.EditNode(
+                key = nodeCard.node.key,
+                title = title,
+                color = selectedColor,
+            )
+        )
+        is NodeCard.NewNode -> onAddNode(
+            TreeEvent.AddNode(
+                parentKey = nodeCard.parentKey,
+                atIndex = nodeCard.atIndex,
+                title = title,
+                color = selectedColor,
+            )
+        )
+        null -> {}
+    }
+}
+
+@Composable
+private fun DeleteButton(
+    nodeCard: NodeCard?,
+    onDelete: () -> Unit,
+) {
+    var deleteConfirmed by remember(nodeCard) { mutableStateOf(false) }
+    IconButton(
+        modifier = Modifier.clip(CircleShape),
+        onClick = {
+            if (deleteConfirmed) {
+                onDelete()
+            } else {
+                deleteConfirmed = true
+            }
+        },
+        colors = IconButtonDefaults.iconButtonColors(
+            containerColor = when (deleteConfirmed) {
+                true -> MaterialTheme.colorScheme.error
+                false -> MaterialTheme.colorScheme.errorContainer
+            },
+            contentColor = when (deleteConfirmed) {
+                true -> MaterialTheme.colorScheme.onError
+                false -> MaterialTheme.colorScheme.error
+            },
+        )
+    ) {
+        Icon(
+            imageVector = if (deleteConfirmed)
+                Icons.Rounded.DeleteForever else Icons.Rounded.Delete,
+            contentDescription = "delete"
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 private fun TitleInput(
+    nodeCard: NodeCard?,
     initialValue: String,
     modifier: Modifier = Modifier,
     onValueChange: (String) -> Unit,
@@ -180,15 +235,23 @@ private fun TitleInput(
         mutableStateOf(TextFieldValue(initialValue, selection))
     }
     LaunchedEffect(initialValue) {
-        if (initialValue != textField.text && initialValue.isNotBlank()) {
+        if (initialValue != textField.text) {
             delay(50) // fix race condition
             textField = TextFieldValue(
                 initialValue, TextRange(initialValue.length)
             )
         }
     }
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+    LaunchedEffect(nodeCard) {
+        if (nodeCard != null) {
+            focusRequester.requestFocus()
+            keyboardController?.show()
+        }
+    }
     OutlinedTextField(
-        modifier = modifier,
+        modifier = modifier.focusRequester(focusRequester),
         value = textField,
         onValueChange = { newValue ->
             // new value different than the current one
@@ -197,12 +260,18 @@ private fun TitleInput(
             }
             textField = newValue
         },
+        singleLine = true,
         placeholder = {
-            Text(
-                text = "Enter node title",
-                color = MaterialTheme.colorScheme.scrim,
-            )
-        }
+            Text(text = "Enter node title")
+        },
+        keyboardOptions = KeyboardOptions(
+            capitalization = KeyboardCapitalization.Sentences,
+            keyboardType = KeyboardType.Text,
+            imeAction = ImeAction.Done
+        ),
+        keyboardActions = KeyboardActions(onAny = {
+            keyboardController?.hide()
+        })
     )
 }
 
@@ -351,7 +420,8 @@ private fun Preview_EditNode_Empty() {
             onAddNode = {},
             onAddNodeModal = {},
             onDeleteNode = {},
-            onEditNode = {}
+            onEditNode = {},
+            onClose = {},
         )
     }
 }
@@ -374,7 +444,8 @@ private fun Preview_EditNode_WithChildren() {
             onDeleteNode = {},
             onEditNode = {},
             onAddNodeModal = {},
-            onAddNode = {}
+            onAddNode = {},
+            onClose = {},
         )
     }
 }
@@ -390,7 +461,8 @@ private fun Preview_NewNode() {
             onAddNodeModal = {},
             onAddNode = {},
             onEditNode = {},
-            onDeleteNode = {}
+            onDeleteNode = {},
+            onClose = {},
         )
     }
 }

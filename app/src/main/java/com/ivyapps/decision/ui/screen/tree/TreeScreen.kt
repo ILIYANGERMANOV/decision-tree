@@ -1,6 +1,7 @@
 package com.ivyapps.decision.ui.screen.tree
 
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
@@ -83,6 +84,10 @@ private fun dummyTree(): TreeNode = TreeNode(
 fun TreeScreen() {
     val viewModel: TreeViewModel = viewModel()
     val state by viewModel.state.collectAsState()
+
+    BackHandler(state.nodeCard != null) {
+        viewModel.onEvent(TreeEvent.CloseNodeModal)
+    }
 
     Tree(
         tree = state.tree,
@@ -172,6 +177,9 @@ private fun Tree(
         onAddNode = onEvent,
         onEditNode = onEvent,
         onDeleteNode = onEvent,
+        onClose = {
+            onEvent(TreeEvent.CloseNodeModal)
+        }
     )
 }
 

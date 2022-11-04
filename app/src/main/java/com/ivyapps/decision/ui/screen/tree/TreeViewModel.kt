@@ -58,21 +58,28 @@ class TreeViewModel @Inject constructor() : ViewModel() {
                 is TreeEvent.NodeClicked -> handleNodeClicked(event)
                 TreeEvent.ResetSelected -> handleResetSelected()
                 TreeEvent.ToggleEditMode -> handleToggleEditMode()
-                is TreeEvent.AddNodeModal -> handleAddNodeModal(event)
+                is TreeEvent.ShowAddNodeModal -> handleAddNodeModal(event)
+                TreeEvent.CloseNodeModal -> handleCloseNodeModal()
             }
         }
     }
 
+    private fun handleCloseNodeModal() {
+        nodeCard.value = null
+    }
+
     private fun handleAddNode(event: TreeEvent.AddNode) {
+        val newNode = TreeNode(
+            title = event.title,
+            color = event.color,
+        )
         tree.value = tree.value.addNode(
             toKey = event.parentKey,
             atIndex = event.atIndex,
-            node = TreeNode(
-                title = event.title,
-                color = event.color,
-            )
+            node = newNode
         )
-        nodeCard.value = null
+        // Start editing node, immediately after saving it
+        nodeCard.value = NodeCard.EditNode(newNode)
     }
 
     private fun handleDeleteNode(event: TreeEvent.DeleteNode) {
@@ -89,7 +96,6 @@ class TreeViewModel @Inject constructor() : ViewModel() {
                 color = event.color,
             )
         }
-        nodeCard.value = null
     }
 
     // region Node click
@@ -116,7 +122,7 @@ class TreeViewModel @Inject constructor() : ViewModel() {
     }
     // endregion
 
-    private fun handleAddNodeModal(event: TreeEvent.AddNodeModal) {
+    private fun handleAddNodeModal(event: TreeEvent.ShowAddNodeModal) {
         nodeCard.value = event.card
     }
 
