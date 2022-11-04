@@ -40,6 +40,20 @@ android {
             )
         }
 
+        create("demo") {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            isDebuggable = false
+            isDefault = false
+
+            signingConfig = signingConfigs.getByName("debug")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            applicationIdSuffix = ".demo"
+        }
+
         debug {
             isDebuggable = true
             isMinifyEnabled = false
