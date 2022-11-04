@@ -37,7 +37,7 @@ fun TreeNodeCircle(
     Surface(
         modifier = modifier.zIndex(16f),
         shape = CircleShape,
-        color = if (selected) node.color else Color.Transparent,
+        color = if (selected) node.color else MaterialTheme.colorScheme.background,
         contentColor = when (selected) {
             true -> contrastColor(node.color)
             false -> MaterialTheme.colorScheme.onBackground

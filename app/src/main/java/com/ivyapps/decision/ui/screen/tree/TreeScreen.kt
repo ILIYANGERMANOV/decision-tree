@@ -87,7 +87,10 @@ private fun Tree(
         DrawLevel(
             level = 0,
             levelItems = listOf(
-                DpOffset(x = screenWidth / 2 - circleSize / 2, y = 0.dp) to listOf(tree)
+                DpOffset(
+                    x = screenWidth / 2 - circleSize / 2,
+                    y = circleSize / 2
+                ) to listOf(tree)
             ),
             selectedKeys = selectedKeys,
             fontSize = fontSize,
@@ -148,7 +151,7 @@ private fun DrawLevel(
                     start = parentOffset,
                     end = DpOffset(
                         x = x + circleSize / 2,
-                        y = y
+                        y = y + circleSize / 2
                     ),
                     color = if (selected) node.color else Gray,
                 )
@@ -168,7 +171,7 @@ private fun DrawLevel(
                 nextLevelItems.add(
                     DpOffset(
                         x = x + circleSize / 2,
-                        y = y + circleSize,
+                        y = y + circleSize / 2,
                     ) to node.children
                 )
             }
